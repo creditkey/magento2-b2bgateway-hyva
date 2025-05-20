@@ -1,0 +1,17 @@
+{
+    "name": "creditkey/b2bgateway-hyva",
+    "version": "1.0.0",
+    "description": "CreditKey B2B Gateway for Magento 2 Hyva Theme",
+    "require": {
+        "creditkey/b2bgateway": "^1.0",
+        "hyva-themes/magento2-theme-module": "^1.3.11",
+        "hyva-themes/magento2-hyva-checkout": "^1.3"
+    },
+    "type": "magento2-module",
+    "autoload": {
+        "files": [ "registration.php" ],
+        "psr-4": {
+            "CreditKey\\B2BGatewayHyva\\": ""
+        }
+    }
+}

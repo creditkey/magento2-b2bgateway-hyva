@@ -1,0 +1,74 @@
+<?php
+
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+use CreditKey\B2BGatewayHyva\Magewire\Payment\Method\CreditKey;
+
+/** @var Escaper $escaper */
+/** @var Template $block */
+/** @var CreditKey $magewire */
+
+$magewire = $block->getData('magewire');
+$methodCode = $magewire->getMethodCode();
+$iframeUrl = $magewire->getIframeUrl();
+?>
+
+<div class="message notice">
+    <div>
+        <?= $escaper->escapeHtml(__('Please do not refresh the page until you complete payment.')) ?>
+    </div>
+</div>
+
+<script>
+    (() => {
+        // const container = document.getElementById('creditkey-container');
+        const config = <?= /** @noEscape */ $magewire->getJsConfig() ?>;
+
+        function createScriptLoadPromise(url) {
+            return new Promise((resolve, reject) => {
+                if (window.ck) {
+                    resolve(window.ck);
+
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = url;
+
+                script.addEventListener('load', function() {
+                    resolve(window.ck);
+                }, false);
+
+                script.addEventListener('error', function() {
+                    reject(script);
+                }, false);
+
+                document.body.appendChild(script);
+            })
+        }
+
+        window.addEventListener('checkout:payment:method-activate', () => {
+            hyvaCheckout.payment.activate('<?= /** noEscape */ $methodCode ?>', {
+                initialize() {
+                    createScriptLoadPromise(config.sdkUrl)
+                        .then((creditKey) => {
+                            new creditKey.Client(config.publicKey, config.endpoint)
+                        });
+                },
+                placeOrderViaJs() {
+                    return true;
+                },
+                placeOrder() {
+                    return new Promise((resolve, reject) => {
+                        if (window.ck) {
+                            window.ck.checkout(config.redirectUrl);
+                            resolve();
+                        } else {
+                            reject(new Error('CreditKey SDK not loaded'));
+                        }
+                    });
+                }
+            })
+        }, { once: true })
+    })()
+</script>

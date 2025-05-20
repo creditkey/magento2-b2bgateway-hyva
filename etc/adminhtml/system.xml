@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="payment">
+            <group id="creditkey_gateway" translate="label" type="text">
+                <field id="sdk_url" translate="label" type="text" sortOrder="100" showInDefault="1">
+                    <label>JS SDK URL</label>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

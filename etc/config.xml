@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <payment>
+            <creditkey_gateway>
+                <sdk_url>https://unpkg.com/@credit-key/creditkey-js@latest/umd/creditkey-js.js</sdk_url>
+            </creditkey_gateway>
+        </payment>
+    </default>
+</config>
