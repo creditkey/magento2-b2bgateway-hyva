@@ -1,6 +1,6 @@
 {
     "name": "creditkey/b2bgateway-hyva",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "CreditKey B2B Gateway for Magento 2 Hyva Theme",
     "require": {
         "creditkey/b2bgateway": "^1.0",
