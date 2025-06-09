@@ -13,7 +13,7 @@ $methodCode = $magewire->getMethodCode();
 $iframeUrl = $magewire->getIframeUrl();
 ?>
 
-<div class="message notice">
+<div id="credit-key-container" class="message notice">
     <div>
         <?= $escaper->escapeHtml(__('Please do not refresh the page until you complete payment.')) ?>
     </div>
@@ -21,7 +21,7 @@ $iframeUrl = $magewire->getIframeUrl();
 
 <script>
     (() => {
-        // const container = document.getElementById('creditkey-container');
+        const container = document.getElementById('credit-key-container');
         const config = <?= /** @noEscape */ $magewire->getJsConfig() ?>;
 
         function createScriptLoadPromise(url) {
@@ -68,7 +68,7 @@ $iframeUrl = $magewire->getIframeUrl();
                         }
                     });
                 }
-            })
+            }, container)
         }, { once: true })
     })()
 </script>
