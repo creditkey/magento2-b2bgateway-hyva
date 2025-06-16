@@ -52,7 +52,19 @@ $iframeUrl = $magewire->getIframeUrl();
                 initialize() {
                     createScriptLoadPromise(config.sdkUrl)
                         .then((creditKey) => {
-                            new creditKey.Client(config.publicKey, config.endpoint)
+                            window.addEventListener('message', function (event) {
+                                if (event.origin !== window.location.origin) {
+                                    return;
+                                }
+
+                                if (event.data.event === 'creditkey_b2b_gateway' && event.data.action === 'closePopup') {
+                                    setTimeout(() => {
+                                        document.getElementById('creditkey-modal').remove();
+                                    }, 5000);
+                                }
+                            });
+
+                            new creditKey.Client(config.publicKey, config.endpoint);
                         });
                 },
                 placeOrderViaJs() {
