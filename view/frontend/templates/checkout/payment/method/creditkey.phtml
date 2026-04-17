@@ -21,8 +21,8 @@ $iframeUrl = $magewire->getIframeUrl();
 
 <script>
     (() => {
-        const container = document.getElementById('credit-key-container');
         const config = <?= /** @noEscape */ $magewire->getJsConfig() ?>;
+        let ckSdkLoaded = false;
 
         function createScriptLoadPromise(url) {
             return new Promise((resolve, reject) => {
@@ -48,39 +48,65 @@ $iframeUrl = $magewire->getIframeUrl();
         }
 
         window.addEventListener('checkout:payment:method-activate', () => {
-            hyvaCheckout.payment.activate('<?= /** noEscape */ $methodCode ?>', {
-                initialize() {
-                    createScriptLoadPromise(config.sdkUrl)
-                        .then((creditKey) => {
-                            window.addEventListener('message', function (event) {
-                                if (event.origin !== window.location.origin) {
-                                    return;
-                                }
+            hyvaCheckout.payment.registerMethod({
+                code: '<?= /** noEscape */ $methodCode ?>',
+                method: {
+                    async initialize() {
+                        await createScriptLoadPromise(config.sdkUrl)
+                            .then((creditKey) => {
+                                ckSdkLoaded = true;
 
-                                if (event.data.event === 'creditkey_b2b_gateway' && event.data.action === 'closePopup') {
-                                    setTimeout(() => {
-                                        document.getElementById('creditkey-modal').remove();
-                                    }, 5000);
-                                }
+                                window.addEventListener('message', function (event) {
+                                    if (event.origin !== window.location.origin) {
+                                        return;
+                                    }
+
+                                    if (event.data.event === 'creditkey_b2b_gateway' && event.data.action === 'closePopup') {
+                                        setTimeout(() => {
+                                            const modal = document.getElementById('creditkey-modal');
+                                            if (modal) {
+                                                modal.remove();
+                                            }
+                                        }, 5000);
+                                    }
+                                });
+
+                                new creditKey.Client(config.publicKey, config.endpoint);
                             });
+                    },
+                    async uninitialize() {
+                        ckSdkLoaded = false;
+                    },
+                    async validate() {
+                        return ckSdkLoaded && !!window.ck;
+                    },
 
-                            new creditKey.Client(config.publicKey, config.endpoint);
-                        });
-                },
-                placeOrderViaJs() {
-                    return true;
-                },
-                placeOrder() {
-                    return new Promise((resolve, reject) => {
+                    async placeOrder({ fallback }) {
                         if (window.ck) {
                             window.ck.checkout(config.redirectUrl);
-                            resolve();
-                        } else {
-                            reject(new Error('CreditKey SDK not loaded'));
+                            return new Promise(() => {});
                         }
-                    });
+
+                        if (fallback && typeof fallback === 'function') {
+                            await fallback();
+                        }
+
+                        return false;
+                    },
+
+                    async canRedirect() {
+                        return true;
+                    },
+
+                    async getRedirectUrl({ fallback }) {
+                        return config.redirectUrl || (fallback ? fallback() : null);
+                    },
+
+                    placeOrderViaJs() {
+                        return true;
+                    }
                 }
-            }, container)
+            });
         }, { once: true })
     })()
 </script>
