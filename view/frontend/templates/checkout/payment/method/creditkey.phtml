@@ -21,6 +21,7 @@ $iframeUrl = $magewire->getIframeUrl();
 
 <script>
     (() => {
+        const container = document.getElementById('credit-key-container');
         const config = <?= /** @noEscape */ $magewire->getJsConfig() ?>;
         let ckSdkLoaded = false;
 
@@ -48,65 +49,62 @@ $iframeUrl = $magewire->getIframeUrl();
         }
 
         window.addEventListener('checkout:payment:method-activate', () => {
-            hyvaCheckout.payment.registerMethod({
-                code: '<?= /** noEscape */ $methodCode ?>',
-                method: {
-                    async initialize() {
-                        await createScriptLoadPromise(config.sdkUrl)
-                            .then((creditKey) => {
-                                ckSdkLoaded = true;
+            hyvaCheckout.payment.activate('<?= /** noEscape */ $methodCode ?>', {
+                async initialize() {
+                    await createScriptLoadPromise(config.sdkUrl)
+                        .then((creditKey) => {
+                            ckSdkLoaded = true;
 
-                                window.addEventListener('message', function (event) {
-                                    if (event.origin !== window.location.origin) {
-                                        return;
-                                    }
+                            window.addEventListener('message', function (event) {
+                                if (event.origin !== window.location.origin) {
+                                    return;
+                                }
 
-                                    if (event.data.event === 'creditkey_b2b_gateway' && event.data.action === 'closePopup') {
-                                        setTimeout(() => {
-                                            const modal = document.getElementById('creditkey-modal');
-                                            if (modal) {
-                                                modal.remove();
-                                            }
-                                        }, 5000);
-                                    }
-                                });
-
-                                new creditKey.Client(config.publicKey, config.endpoint);
+                                if (event.data.event === 'creditkey_b2b_gateway' && event.data.action === 'closePopup') {
+                                    setTimeout(() => {
+                                        const modal = document.getElementById('creditkey-modal');
+                                        if (modal) {
+                                            modal.remove();
+                                        }
+                                    }, 5000);
+                                }
                             });
-                    },
-                    async uninitialize() {
-                        ckSdkLoaded = false;
-                    },
-                    async validate() {
-                        return ckSdkLoaded && !!window.ck;
-                    },
 
-                    async placeOrder({ fallback }) {
-                        if (window.ck) {
-                            window.ck.checkout(config.redirectUrl);
-                            return new Promise(() => {});
-                        }
+                            new creditKey.Client(config.publicKey, config.endpoint);
+                        });
+                },
+                async uninitialize() {
+                    ckSdkLoaded = false;
+                },
+                async validate() {
+                    return ckSdkLoaded && !!window.ck;
+                },
 
-                        if (fallback && typeof fallback === 'function') {
-                            await fallback();
-                        }
-
-                        return false;
-                    },
-
-                    async canRedirect() {
-                        return true;
-                    },
-
-                    async getRedirectUrl({ fallback }) {
-                        return config.redirectUrl || (fallback ? fallback() : null);
-                    },
-
-                    placeOrderViaJs() {
-                        return true;
+                async placeOrder({ fallback }) {
+                    if (window.ck) {
+                        window.ck.checkout(config.redirectUrl);
+                        return new Promise(() => {});
                     }
+
+                    if (fallback && typeof fallback === 'function') {
+                        await fallback();
+                    }
+
+                    return false;
+                },
+
+                async canRedirect() {
+                    return true;
+                },
+
+                async getRedirectUrl({ fallback }) {
+                    return config.redirectUrl || (fallback ? fallback() : null);
+                },
+
+                placeOrderViaJs() {
+                    return true;
                 }
-            });
+            }, container)
         }, { once: true })
     })()
 </script>
